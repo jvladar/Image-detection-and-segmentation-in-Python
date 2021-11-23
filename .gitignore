@@ -1,10 +1,4 @@
-*/*
-
-!.gitignore
-!README.md
-!Mytilus_original/
-!MytilusEtalons/
-!Zostera_original/
-!ZosteraEtalons/
-!hw2.ipynb
-!ITS8030hw2_assignment.pdf
+.ipynb_checkpoints/
+Mytilus/
+Zostera/
+*.py
