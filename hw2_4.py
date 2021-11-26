@@ -10,7 +10,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-dataDir='cocoOcean'
+dataDir='coco'
 dataType='images'
 annFile='{}/annotations/instances_{}.json'.format(dataDir,dataType)
 
@@ -68,10 +68,8 @@ def saving(name, generate_files=True):
             plt.axis('off')
             if not os.path.exists("Masks"):
                 os.mkdir("Masks")
-            #plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
             plt.savefig("Masks" + '/' + str(i) + name + "Ms.png", bbox_inches='tight',pad_inches = 0)
             plt.close()
-
     return unique_images
 
 uniq_im = None
