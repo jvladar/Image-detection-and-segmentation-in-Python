@@ -5,6 +5,7 @@ import random
 import os
 import cv2
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import tensorflow as tf
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -20,7 +21,7 @@ coco = COCO(annFile)
 catIDs = coco.getCatIds()
 categories = coco.loadCats(catIDs)
 
-print (categories)
+print ("Categories:", categories)
 
 def saving(name, generate_files=True):
     classes = [name]  # todo refactor
@@ -174,12 +175,12 @@ def visualizeGenerator(gen):
 batch_size = 4
 input_image_size = (224, 224)  # todo edit image size according to selected model
 
-val_gen = dataGeneratorCoco(uniq_im, categories, coco, dataDir)
+val_gen = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_size)
 
 # visualizeGenerator(val_gen)
 
 """
-AUGMENTACE
+AUGMENTATION
 2.2
 """
 
@@ -229,30 +230,35 @@ augGeneratorArgs = dict(featurewise_center = False,
 # Call the function with the arguments
 aug_gen = augmentationsGenerator(val_gen, augGeneratorArgs)
 
-visualizeGenerator(aug_gen)
-raise "chyba"
+# visualizeGenerator(aug_gen)
 
 """"
 APLIKACE NA MODEL
 """
-
+NUMBER_OF_EPOCHS = 50
 # -> Create filtered train dataset (using filterDataset()) 
 # -> Create filtered val dataset (using filterDataset())
 # -> Create train generator (using dataGeneratorCoco()) 
 # -> Create train generator (using dataGeneratorCoco())
 # Set your parameters
-# n_epochs = <number of epochs of training>
-# steps_per_epoch = dataset_size_train // batch_size
-# validation_steps = dataset_size_val // batch_size
-# m = <your model>
-# opt = <your optimizer>
-# lossFn = <your loss function>
-# # Compile your model first
-# m.compile(loss = lossFn, optimizer = opt, metrics=['accuracy'])
-# # Start the training process
-# history = m.fit(x = train_gen_aug,
-#                 validation_data = val_gen_aug,
-#                 steps_per_epoch = steps_per_epoch,
-#                 validation_steps = validation_steps,
-#                 epochs = n_epochs,
-#                 verbose = True)
+n_epochs = NUMBER_OF_EPOCHS
+IMG_SHAPE = input_image_size + (3,)
+# ptimizery -> https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
+# loss funkce -> https://www.tensorflow.org/api_docs/python/tf/keras/losses
+
+steps_per_epoch = dataset_size_train // batch_size
+validation_steps = dataset_size_val // batch_size
+model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+                                          include_top=False,
+                                          weights='imagenet')
+opt = tf.keras.optimizers.Adam(learning_rate=0.001)
+lossFn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+# Compile your model first
+model.compile(loss = lossFn, optimizer = opt, metrics=['accuracy'])
+# Start the training process
+history = model.fit(x = train_gen_aug,
+                    validation_data = val_gen_aug,
+                    steps_per_epoch = steps_per_epoch,
+                    validation_steps = validation_steps,
+                    epochs = n_epochs,
+                    verbose = True)
