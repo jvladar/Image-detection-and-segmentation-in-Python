@@ -33,7 +33,7 @@ def saving(name, generate_files=True):
             catIds = coco.getCatIds(catNms=className)
             imgIds = coco.getImgIds(catIds=catIds)
             images += coco.loadImgs(imgIds)
-    else:
+    else: # todo delete branch
         imgIds = coco.getImgIds()
         images = coco.loadImgs(imgIds)
         
@@ -44,32 +44,34 @@ def saving(name, generate_files=True):
             unique_images.append(images[i])
     dataset_size = len(imgIds)
 
-    if generate_files:
-        for i in range(len(imgIds)):
-            img = coco.loadImgs(imgIds[i])[0]
-            I = io.imread('{}/{}/{}'.format(dataDir,dataType,img['file_name']))/255.0
+    if not generate_files:
+        return unique_images
 
-            plt.imshow(I)
-            plt.axis('off')
-            annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
-            anns = coco.loadAnns(annIds)
-            coco.showAnns(anns)
-            if not os.path.exists("Frames"):
-                os.mkdir("Frames")
-            plt.savefig("Frames" + '/' + str(i) + name + "Fr.png", bbox_inches='tight',pad_inches = 0)
-            plt.close()
+    for i in range(len(imgIds)):
+        img = coco.loadImgs(imgIds[i])[0]
+        I = io.imread('{}/{}/{}'.format(dataDir,dataType,img['file_name']))/255.0
 
-            print("Number of images containing the filter classes:", dataset_size)
+        plt.imshow(I)
+        plt.axis('off')
+        annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
+        anns = coco.loadAnns(annIds)
+        coco.showAnns(anns)
+        if not os.path.exists("Frames"):
+            os.mkdir("Frames")
+        plt.savefig("Frames" + '/' + str(i) + name + "Fr.png", bbox_inches='tight',pad_inches = 0)
+        plt.close()
 
-            mask = np.zeros((img['height'],img['width']))
-            for m in range(len(anns)):
-                mask = np.maximum(coco.annToMask(anns[m]), mask)
-            plt.imshow(mask)
-            plt.axis('off')
-            if not os.path.exists("Masks"):
-                os.mkdir("Masks")
-            plt.savefig("Masks" + '/' + str(i) + name + "Ms.png", bbox_inches='tight',pad_inches = 0)
-            plt.close()
+        print("Number of images containing the filter classes:", dataset_size)
+
+        mask = np.zeros((img['height'],img['width']))
+        for m in range(len(anns)):
+            mask = np.maximum(coco.annToMask(anns[m]), mask)
+        plt.imshow(mask)
+        plt.axis('off')
+        if not os.path.exists("Masks"):
+            os.mkdir("Masks")
+        plt.savefig("Masks" + '/' + str(i) + name + "Ms.png", bbox_inches='tight',pad_inches = 0)
+        plt.close()
     return unique_images
 
 uniq_im = None
@@ -118,8 +120,8 @@ def getBinaryMask(imageObj, coco, catIds, input_image_size):
 # classes = ['Mytilus', 'Zostera'] ??
 def dataGeneratorCoco(images, classes, coco, folder, 
                       input_image_size=(224,224), batch_size=4,  # todo edit image size according to selected model
-                      mode='train', mask_type='binary'):  # todo odebrat mask_type
-    img_folder = '{}/images/'.format(folder)#, mode)
+                      mode='', mask_type='binary'):  # todo odebrat mask_type
+    img_folder = '{}/images/{}'.format(folder, mode)
     # print("zacatek generator", images[0], len(images))
     dataset_size = len(images)
     catIds = coco.getCatIds(catNms=classes)
@@ -133,6 +135,9 @@ def dataGeneratorCoco(images, classes, coco, folder,
             imageObj = images[i]
             
             ### Retrieve Image
+            if not os.path.exists(img_folder + '/' + imageObj['file_name']):
+                continue
+
             train_img = getImage(imageObj, img_folder, input_image_size)
             
             ### Create Mask
@@ -172,8 +177,11 @@ def visualizeGenerator(gen):
 
 batch_size = 4
 input_image_size = (224, 224)  # todo edit image size according to selected model
+# mode = 'train'
 
-val_gen = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_size)
+# val_gen = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_size, batch_size)
+val_gen_train = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_size, batch_size, 'train')
+val_gen_val = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_size, batch_size, 'val')
 
 # visualizeGenerator(val_gen)
 
@@ -226,36 +234,40 @@ augGeneratorArgs = dict(featurewise_center = False,
                         data_format = 'channels_last')
 
 # Call the function with the arguments
-aug_gen = augmentationsGenerator(val_gen, augGeneratorArgs)
+# aug_gen = augmentationsGenerator(val_gen, augGeneratorArgs)
+aug_gen_train = augmentationsGenerator(val_gen_train, augGeneratorArgs)
+aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 
 # visualizeGenerator(aug_gen)
 
 """"
 APLIKACE NA MODEL
 """
-NUMBER_OF_EPOCHS = 50
 # -> Create filtered train dataset (using filterDataset()) 
 # -> Create filtered val dataset (using filterDataset())
 # -> Create train generator (using dataGeneratorCoco()) 
 # -> Create train generator (using dataGeneratorCoco())
 # Set your parameters
+NUMBER_OF_EPOCHS = 2
 n_epochs = NUMBER_OF_EPOCHS
 IMG_SHAPE = input_image_size + (3,)
-# ptimizery -> https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
+# optimizery -> https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
 # loss funkce -> https://www.tensorflow.org/api_docs/python/tf/keras/losses
 
+dataset_size_train = 15
+dataset_size_val = 8
 steps_per_epoch = dataset_size_train // batch_size
 validation_steps = dataset_size_val // batch_size
 model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
                                           include_top=False,
                                           weights='imagenet')
-opt = tf.keras.optimizers.Adam(learning_rate=0.001)
-lossFn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+# opt = tf.keras.optimizers.Adam(learning_rate=0.001)
+# lossFn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 # Compile your model first
-model.compile(loss = lossFn, optimizer = opt, metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 # Start the training process
-history = model.fit(x = train_gen_aug,
-                    validation_data = val_gen_aug,
+history = model.fit(x = aug_gen_train,
+                    validation_data = aug_gen_val,
                     steps_per_epoch = steps_per_epoch,
                     validation_steps = validation_steps,
                     epochs = n_epochs,
