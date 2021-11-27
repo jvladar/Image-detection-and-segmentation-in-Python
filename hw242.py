@@ -12,88 +12,91 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 dataDir='coco'
-dataType='val'
-annFile='{}/annotations/instances_{}.json'.format(dataDir,dataType)
+dataType='val'  # todo, change for train here
+annFile='{}/annotations/instances_{}.json'.format(dataDir, dataType)
 
-# initialize the COCO api for instance annotations
-coco=COCO(annFile)
+ukazka_part_1 = False
+if ukazka_part_1:
+    # initialize the COCO api for instance annotations
+    coco=COCO(annFile)
 
-catIDs = coco.getCatIds()
-cats = coco.loadCats(catIDs)
+    catIDs = coco.getCatIds()
+    cats = coco.loadCats(catIDs)
 
-nms=[cat['name'] for cat in cats]
-print(len(nms),'COCO categories: \n{}\n'.format(' '.join(nms)))
+    nms=[cat['name'] for cat in cats]
+    print(len(nms),'COCO categories: {}'.format(' '.join(nms)))
 
-nms = set([cat['supercategory'] for cat in cats])
-print(len(nms),'COCO supercategories: \n{}'.format(' '.join(nms)))
+    def getClassName(classID, cats):
+        for i in range(len(cats)):
+            if cats[i]['id']==classID:
+                return cats[i]['name']
+        return "None"
 
-def getClassName(classID, cats):
-    for i in range(len(cats)):
-        if cats[i]['id']==classID:
-            return cats[i]['name']
-    return "None"
+    print('The class name is', getClassName(1, cats))  # should produce Mytilus
 
-print('The class name is', getClassName(77, cats))
+    filterClasses = ['Mytilus']#, 'Zostera']
+    # Fetch class IDs only corresponding to the filterClasses
+    catIds = coco.getCatIds(catNms=filterClasses)
+    # Get all images containing the above Category IDs
+    imgIds = coco.getImgIds(catIds=catIds)
+    print("Number of images containing all required classes:", len(imgIds))
 
-filterClasses = ['Mytilus', 'Zostera']
-catIds = coco.getCatIds(catNms=filterClasses);
-imgIds = coco.getImgIds(catIds=catIds);
+    # load and show random img
+    img = coco.loadImgs(imgIds[np.random.randint(0,len(imgIds))])[0]
+    # I = io.imread('{}/images/{}/{}'.format(dataDir,dataType,img['file_name']))/255.0
+    # plt.axis('off')
+    # plt.imshow(I)
+    # plt.show()
 
-print("Number of images containing all required classes:", len(imgIds))
+    # Load and display instance annotations
+    # plt.imshow(I); plt.axis('off')
+    annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
+    anns = coco.loadAnns(annIds)
+    # coco.showAnns(anns)
 
-img = coco.loadImgs(imgIds[np.random.randint(0,len(imgIds))])[0]
-I = io.imread('{}/images/{}/{}'.format(dataDir,dataType,img['file_name']))/255.0
-# Or use url to load image
-# I = io.imread(img['coco_url'])
-plt.axis('off')
-plt.imshow(I)
-plt.show()
+    classes = ['Mytilus', 'Zostera']
+    images = []
+    if classes != None:
+        # iterate for each individual class in the list
+        for className in classes:
+            # get all images containing given class
+            catIds = coco.getCatIds(catNms=className)
+            imgIds = coco.getImgIds(catIds=catIds)
+            images += coco.loadImgs(imgIds)
+    else:
+        imgIds = coco.getImgIds()
+        images = coco.loadImgs(imgIds)
+        
+    # Now, filter out the repeated images    
+    unique_images = []
+    for i in range(len(images)):
+        if images[i] not in unique_images:
+            unique_images.append(images[i])
 
-plt.imshow(I); plt.axis('off')
-annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
-anns = coco.loadAnns(annIds)
-coco.showAnns(anns)
+    dataset_size = len(unique_images)
 
-classes = ['Mytilus', 'Zostera']
+    print("Number of images containing the filter classes:", dataset_size)
 
-images = []
-if classes!=None:
-    # iterate for each individual class in the list
-    for className in classes:
-        # get all images containing given class
-        catIds = coco.getCatIds(catNms=className)
-        imgIds = coco.getImgIds(catIds=catIds)
-        images += coco.loadImgs(imgIds)
-else:
-    imgIds = coco.getImgIds()
-    images = coco.loadImgs(imgIds)
-    
-# Now, filter out the repeated images    
-unique_images = []
-for i in range(len(images)):
-    if images[i] not in unique_images:
-        unique_images.append(images[i])
+    """
+    4. Image Segmentation Mask Generation
+    """
+    filterClasses = ['Mytilus', 'Zostera']
+    mask = np.zeros((img['height'],img['width']))
+    for i in range(len(anns)):
+        className = getClassName(anns[i]['category_id'], cats)
+        pixel_value = filterClasses.index(className)+1
+        mask = np.maximum(coco.annToMask(anns[i])*pixel_value, mask)
+    # plt.imshow(mask)
+    # plt.show()
 
-dataset_size = len(unique_images)
+    print('Unique pixel values in the mask are:', np.unique(mask))
 
-print("Number of images containing the filter classes:", dataset_size)
-
-filterClasses = ['Mytilus', 'Zostera']
-mask = np.zeros((img['height'],img['width']))
-for i in range(len(anns)):
-    className = getClassName(anns[i]['category_id'], cats)
-    pixel_value = filterClasses.index(className)+1
-    mask = np.maximum(coco.annToMask(anns[i])*pixel_value, mask)
-plt.imshow(mask)
-
-print('Unique pixel values in the mask are:', np.unique(mask))
-
-mask = np.zeros((img['height'],img['width']))
-for i in range(len(anns)):
-    mask = np.maximum(coco.annToMask(anns[i]), mask)
-plt.imshow(mask)
-
-print('Unique pixel values in the mask are:', np.unique(mask))
+    # # Binary Semantic Segmentation Mask
+    # mask = np.zeros((img['height'],img['width']))
+    # for i in range(len(anns)):
+    #     mask = np.maximum(coco.annToMask(anns[i]), mask)
+    # plt.imshow(mask)
+    # print('Unique pixel values in the mask are:', np.unique(mask))
 
 def filterDataset(folder, classes=None, mode='train'):    
     # initialize COCO api for instance annotations
@@ -101,7 +104,7 @@ def filterDataset(folder, classes=None, mode='train'):
     coco = COCO(annFile)
     
     images = []
-    if classes!=None:
+    if classes != None:
         # iterate for each individual class in the list
         for className in classes:
             # get all images containing given categories
@@ -124,12 +127,14 @@ def filterDataset(folder, classes=None, mode='train'):
     
     return unique_images, dataset_size, coco
 
-
 folder = 'coco'
 classes = ['Zostera', 'Mytilus']
 mode = 'val'
+images, dataset_size, coco = filterDataset(folder, classes, mode)
 
-images, dataset_size, coco = filterDataset(folder, classes,  mode)
+"""
+(b) Generate the images and masks
+"""
 
 def getClassName(classID, cats):
     for i in range(len(cats)):
@@ -139,7 +144,10 @@ def getClassName(classID, cats):
 
 def getImage(imageObj, img_folder, input_image_size):
     # Read and normalize an image
-    train_img = io.imread(img_folder + '/' + imageObj['file_name'])/255.0
+    # train_img = io.imread(img_folder + '/' + imageObj['file_name'])/255.0
+    print(img_folder + '/' + imageObj['file_name'])
+    train_img = cv2.imread(img_folder + '/' + imageObj['file_name'])#/255.0
+    train_img = cv2.cvtColor(train_img, cv2.COLOR_BGR2RGB)/255.0
     # Resize
     train_img = cv2.resize(train_img, input_image_size)
     if (len(train_img.shape)==3 and train_img.shape[2]==3): # If it is a RGB 3 channel image
@@ -180,7 +188,6 @@ def getBinaryMask(imageObj, coco, catIds, input_image_size):
     train_mask = train_mask.reshape(input_image_size[0], input_image_size[1], 1)
     return train_mask
 
-
 def dataGeneratorCoco(images, classes, coco, folder, 
                       input_image_size=(224,224), batch_size=4, mode='train', mask_type='binary'):
     
@@ -219,10 +226,6 @@ def dataGeneratorCoco(images, classes, coco, folder,
 batch_size = 4
 input_image_size = (224,224)
 mask_type = 'normal'
-
-val_gen = dataGeneratorCoco(images, classes, coco, folder,
-                            input_image_size, batch_size, mode, mask_type)
-
 def visualizeGenerator(gen):
     img, mask = next(gen)
     
@@ -243,6 +246,10 @@ def visualizeGenerator(gen):
             ax.axis('off')
             fig.add_subplot(ax)        
     plt.show()
+
+val_gen = dataGeneratorCoco(images, classes, coco, folder,
+                            input_image_size, batch_size, mode, mask_type)
+# visualizeGenerator(val_gen)
 
 def augmentationsGenerator(gen, augGeneratorArgs, seed=None):
     # Initialize the image data generator with args provided
@@ -290,13 +297,15 @@ augGeneratorArgs = dict(featurewise_center = False,
                         data_format = 'channels_last')
 
 aug_gen = augmentationsGenerator(val_gen, augGeneratorArgs)
+# visualizeGenerator(aug_gen)
 
-val_gen_train = dataGeneratorCoco(unique_images, cats, coco, dataDir, input_image_size, batch_size, 'train')
-val_gen_val = dataGeneratorCoco(unique_images, cats, coco, dataDir, input_image_size, batch_size, 'val')
+val_gen_train = dataGeneratorCoco(images, classes, coco, dataDir, input_image_size, batch_size, 'train')
+val_gen_val = dataGeneratorCoco(images, classes, coco, dataDir, input_image_size, batch_size, 'val')
 
 aug_gen_train = augmentationsGenerator(val_gen_train, augGeneratorArgs)
 aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 
+# raise "chyba"
 # Create filtered train dataset (using filterDataset()) 
 # Create filtered val dataset (using filterDataset()) 
 
@@ -305,12 +314,11 @@ aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 
 # Set your parameters
 n_epochs = 2
-
 steps_per_epoch = 15 // batch_size
-validation_steps = 8 // batch_size
+validation_steps = 6 // batch_size
 
 m = tf.keras.applications.MobileNetV2(input_shape=[224,224,3],
-                                          include_top=False)
+                                      include_top=False)
 # opt = tf.keras.optimizers.Adam(learning_rate=0.001)
 # lossFn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
