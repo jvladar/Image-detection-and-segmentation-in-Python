@@ -12,7 +12,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-
+# todo remove .DS_store files from repository
 
 dataDir='coco'
 dataType='images'
@@ -121,7 +121,6 @@ def getBinaryMask(imageObj, coco, catIds, input_image_size):
 
 # images = unique_images z saving fkce
 # folder = cocoOcean
-# classes = ['Mytilus', 'Zostera'] ??
 def dataGeneratorCoco(images, classes, coco, folder, 
                       input_image_size=(224,224), batch_size=4,  # todo edit image size according to selected model
                       mode='', mask_type='binary'):  # todo odebrat mask_type
