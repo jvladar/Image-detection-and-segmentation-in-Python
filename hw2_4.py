@@ -7,8 +7,12 @@ import cv2
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 
+
+
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+
+
 
 dataDir='coco'
 dataType='images'
@@ -175,7 +179,7 @@ def visualizeGenerator(gen):
             fig.add_subplot(ax)
     plt.show()
 
-batch_size = 4
+batch_size = 8
 input_image_size = (224, 224)  # todo edit image size according to selected model
 # mode = 'train'
 
