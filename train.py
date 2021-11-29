@@ -16,11 +16,11 @@ from utils import (
 # hyperparameters
 LEARNING_RATE = 1e-4
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 16
+BATCH_SIZE = 4
 NUM_EPOCHS = 3
 NUM_WORKERS = 2
-IMAGE_HEIGHT = 128  # 1280 originally
-IMAGE_WIDTH = 128  # 1918 originally
+IMAGE_HEIGHT = 128
+IMAGE_WIDTH = 128
 PIN_MEMORY = True
 LOAD_MODEL = False
 TRAIN_IMG_DIR = "data/train_images/"
@@ -31,9 +31,9 @@ VAL_MASK_DIR = "data/val_masks/"
 def train_fn(loader, model, optimizer, loss_fn, scaler):
     loop = tqdm(loader)
 
-    for batch_idx, (data, targets) in enumerate(loop):
+    for _, (data, targets) in enumerate(loop):
         data = data.to(device=DEVICE)
-        targets = targets.float().unsqueeze(1).to(device=DEVICE)
+        targets = targets.long().squeeze(1).to(device=DEVICE)
 
         # forward
         with torch.cuda.amp.autocast():
@@ -48,7 +48,6 @@ def train_fn(loader, model, optimizer, loss_fn, scaler):
 
         # update tqdm loop
         loop.set_postfix(loss=loss.item())
-
 
 def main():
     train_transform = A.Compose(
@@ -78,9 +77,9 @@ def main():
         ],
     )
 
-    model = UNET(in_channels=3, out_channels=1).to(DEVICE)
-    loss_fn = nn.BCEWithLogitsLoss()
-    # loss_fn = nn.CrossEntropyLoss()
+    model = UNET(in_channels=3, out_channels=3).to(DEVICE)
+    # loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = nn.CrossEntropyLoss()#ignore_index=255)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     train_loader, val_loader = get_loaders(
@@ -101,7 +100,8 @@ def main():
     check_accuracy(val_loader, model, device=DEVICE)
     scaler = torch.cuda.amp.GradScaler()
 
-    for _ in range(NUM_EPOCHS):
+    for epoch in range(NUM_EPOCHS):
+        print("Epoch number:", epoch)
         train_fn(train_loader, model, optimizer, loss_fn, scaler)
 
         # save model

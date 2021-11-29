@@ -4,8 +4,7 @@ from torch.utils.data import Dataset
 import numpy as np
 from mask_creator import MaskCreator
 
-# todo rename
-class CarvanaDataset(Dataset):
+class SeaFlowersDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
@@ -17,17 +16,9 @@ class CarvanaDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, index):
-        # print("nazev obrazku", self.images[index])
         img_path = os.path.join(self.image_dir, self.images[index])
-        # mask_path = os.path.join(self.mask_dir, self.images[index]
-        # .replace(".jpg", ".png")
-        # .replace(".jpeg", ".png")
-        # )
 
         image = np.array(Image.open(img_path).convert("RGB"))
-        # mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)        
-        # mask[mask == 255.0] = 1.0
-
         mask, className = self.maskCreator.__createMask__(self.images[index])
 
         if className == "Mytilus":
