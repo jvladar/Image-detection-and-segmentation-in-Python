@@ -101,7 +101,7 @@ def main():
     scaler = torch.cuda.amp.GradScaler()
 
     for epoch in range(NUM_EPOCHS):
-        print("Epoch number:", epoch)
+        print("Epoch number:", str(epoch + 1))
         train_fn(train_loader, model, optimizer, loss_fn, scaler)
 
         # save model
@@ -118,7 +118,6 @@ def main():
         save_predictions_as_imgs(
             val_loader, model, folder="saved_images/", device=DEVICE
         )
-
 
 if __name__ == "__main__":
     main()
