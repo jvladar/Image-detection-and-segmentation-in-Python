@@ -1,0 +1,9 @@
+Dokoncit a pushnout original foldery
+Task 2 commentary
+    poznamka s rotacemi u dvojky!
+    finish resolution part
+    doplnit namerene procenta uspesnosti
+    vyresit todos v kodu
+Task 3 commentary
+Task 4 commentary
+
