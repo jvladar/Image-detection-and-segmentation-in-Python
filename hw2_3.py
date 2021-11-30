@@ -1,90 +1,17 @@
 import os
-from PIL import Image
+# from PIL import Image
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 1 task
-
-f = 'Zostera'
-f1= 'Mytilus'
-# def resize (f):
-#     for file in os.listdir(f):
-#         if file != '.DS_Store':
-#             f_img = f+"/"+file
-#             print (file)
-#             img = Image.open(f_img)
-#             img = img.resize((1024,1024))
-#             img.save(f_img)
-# def task1():
-#     resize(f)
-#     resize(f1)
-
-# 2 task
-
-import cv2 as cv
-def match_image(img, template):
-    methods = [cv.TM_CCOEFF, cv.TM_CCOEFF_NORMED, cv.TM_CCORR, cv.TM_CCORR_NORMED,
-        cv.TM_SQDIFF, cv.TM_SQDIFF_NORMED] 
-    result_list = []
-    w, h = template.shape[::-1]
-    match_method = cv.TM_CCOEFF_NORMED
-    res = cv.matchTemplate(img, template, match_method)
-    minval, maxval, minloc, maxloc = cv.minMaxLoc(res)
-    topleft = maxloc
-    btm_right = (topleft[0] + w, topleft[1] + h)
-    cv.rectangle(img, topleft, btm_right, 255, 2)
-    return maxval
-
-
-def congo(etalons,images,my_input,my):
-    for et in os.listdir(etalons):
-        if et != '.DS_Store':
-            e_img = etalons+"/"+et
-            print(e_img)
-            img_teplate= cv.imread(e_img, 0) 
-            my_input=[]
-            for image in os.listdir(images):
-                if image != '.DS_Store':
-                    f_img = images+"/"+image
-                    print("\t", f_img)
-                    img = cv.imread(f_img, 0)
-                    result = match_image(img, img_teplate)
-                    my_input.append(result)
-            my.append(my_input)
-    averages=[]
-    for i in my :
-        avg=0
-        for o in i:
-            avg=avg+o
-        averages.append(avg/(len(my[0])))
-    print(sum(averages)/len(averages))
-    return averages
-
-images = 'Mytilus'
-etalons = 'MytilusEtalons'
-my_input = [] 
-my = [] 
-pele = congo(etalons,images,my_input,my)
-print("Mytilus")
-print(pele)
-
-images = 'Zostera'
-etalons = 'ZosteraEtalons'
-my_input = []
-my = []
-pele = congo(etalons,images,my_input,my)
-print("Zostera")
-print(pele)
-
-# 3 task - SIFT with Flann based 
+# Task 3
+# 1) SIFT with Flann based matching
 
 MIN_MATCH_COUNT = 2
 
 def get_matched_coordinates(temp_img, map_img):
 
     sift = cv2.SIFT_create()
-
 
     kp1, des1 = sift.detectAndCompute(temp_img,None)
     kp2, des2 = sift.detectAndCompute(map_img, None)
@@ -100,7 +27,7 @@ def get_matched_coordinates(temp_img, map_img):
 
     good = []
     for m, n in matches:
-        if m.distance < 0.75*n.distance:
+        if m.distance < 0.75 * n.distance:
             good.append(m)
 
     print(len(good))
@@ -124,7 +51,7 @@ def get_matched_coordinates(temp_img, map_img):
             map_img, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
 
     else:
-        print("Not enough matches are found - %d/%d" %
+        print("Not enough matches were found - %d/%d" %
               (len(good), MIN_MATCH_COUNT))
         matchesMask = None
 
@@ -146,10 +73,7 @@ map_img_gray = cv2.imread('Mytilus/musla9.png', 0)
 get_matched_coordinates(temp_img_gray, map_img_gray)
 
 
-
-
-
-#3 task - ORB
+# 2) ORB with BruteForce matching
 
 img1 = cv2.imread('MytilusEtalons/10.png',0)
 img2 = cv2.imread('Mytilus/musla9.png',0)
@@ -170,19 +94,11 @@ plt.axis('off')
 plt.show()
 
 
-# BFMatcher is going to try all the possibilities (which is the meaning of "Brute Force" and hence it will find the best matches.
-# FLANN, meaning "Fast Library for Approximate Nearest Neighbors", will be much faster but will find an approximate nearest neighbors. 
-# It will find a good matching, but not necessarily the best possible one. You can play with FLANN's parameters in order to increase the precision (i.e. the "quality" of the matchings), but it will be at the cost of slowing the algorithm.
-# In other words: FLANN is much faster than BFMatcher but it only finds an approximate nearest neighbor, which is a good matching but not necessarily the best. 
-# You can play with the parameters of FLANN in order to increase its speed or its precision.
-
-
-# 3 task - SIFT Brute force
+# 3) SIFT with BruteForce matching
 
 MIN_MATCH_COUNT = 2
 
 def get_matched_coordinates(temp_img, map_img):
-
     # initiate SIFT detector
     sift = cv2.SIFT_create()
 
@@ -190,11 +106,9 @@ def get_matched_coordinates(temp_img, map_img):
     kp1, des1 = sift.detectAndCompute(temp_img,None)
     kp2, des2 = sift.detectAndCompute(map_img, None)
 
-
     bf = cv2.BFMatcher()
 
     # find matches by knn which calculates point distance in 128 dim
-    
     matches = bf.knnMatch(des1, des2, k=2)
     # store all the good matches as per Lowe's ratio test.
     good = []
@@ -236,15 +150,12 @@ def get_matched_coordinates(temp_img, map_img):
     img3 = cv2.drawMatches(temp_img, kp1, map_img, kp2,
                            good, None, **draw_params)
 
-    # show result image
+    # show and save result image
     plt.imshow(img3, 'gray'), plt.axis('off'), plt.show()
-
-    # result image path
     cv2.imwrite(os.path.join('resultBF.png'), img3)
     return img3
 
-
-# # read images
+# read images
 temp_img_gray = cv2.imread('MytilusEtalons/10.png', 0)
 map_img_gray = cv2.imread('Mytilus/musla9.png', 0)
 get_matched_coordinates(temp_img_gray, map_img_gray)
