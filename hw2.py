@@ -47,6 +47,7 @@ def congo(etalons,images,my_input,my):
             for image in os.listdir(images):
                 if image != '.DS_Store':
                     f_img = images+"/"+image
+                    print("\t", f_img)
                     img = cv.imread(f_img, 0)
                     result = match_image(img, img_teplate)
                     my_input.append(result)
@@ -70,12 +71,11 @@ print(pele)
 
 images = 'Zostera'
 etalons = 'ZosteraEtalons'
-my_input = [] 
-my = [] 
+my_input = []
+my = []
 pele = congo(etalons,images,my_input,my)
 print("Zostera")
 print(pele)
-
 
 # 3 task - SIFT with Flann based 
 
