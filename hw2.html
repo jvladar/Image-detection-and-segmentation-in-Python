@@ -14793,6 +14793,8 @@ It will find a good matching, but not necessarily the best possible one. We have
 <p><strong>Conclusion</strong></p>
 <p>When comparing the ORB and both SIFT detectors we were able to see that the SIFT detectors perform much better. When we compared the SIFT matching techniques we have come to conclusion that FLANN is much faster than BFMatcher but it only finds an approximate nearest neighbor, which is a good matching but not necessarily the best. Anyway none of the selected detectors performed well when matching etalons with an image which was not containing the etalon. Our results on selected 2 images can be seen in the <em>Task3Results</em> for each 3 feature detectors.</p>
 <p>We have also observed that if we rotate the etalon, the approach used in <a href="#part_2">task 2</a> is not able to find the etalon in the image. But here, using the methods mentioned above we are able to find the etalons even if they were rotated.</p>
+<p>On the first image you can see ORB feature matcher where we want to find etalon on the image, reasult is not so good because there are a lot of match out of correct range. Next example of ORB matching is in Task3Results folder where we were comparing the same etalons but with another image.</p>
+<p>On the second and third images are results of SIFT with Flann based &amp; SIFT with BruteForce, those results are great because we exactly found etalons on the images, this etalons were also rotated and our matching functions didnt have any troubles with correct matching. Next example of SIFT with Flann based $ SIFT with BruteForce are in Task3Results folder where we were comparing the same etalons but with another images.</p>
 
 </div>
 </div>
