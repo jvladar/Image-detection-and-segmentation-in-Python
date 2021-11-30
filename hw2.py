@@ -21,6 +21,7 @@ f1= 'Mytilus'
 #     resize(f1)
 
 # 2 task
+
 import cv2 as cv
 def match_image(img, template):
     methods = [cv.TM_CCOEFF, cv.TM_CCOEFF_NORMED, cv.TM_CCORR, cv.TM_CCORR_NORMED,
@@ -82,10 +83,9 @@ MIN_MATCH_COUNT = 2
 
 def get_matched_coordinates(temp_img, map_img):
 
-    # initiate SIFT detector
     sift = cv2.SIFT_create()
 
-    # find the keypoints and descriptors with SIFT
+
     kp1, des1 = sift.detectAndCompute(temp_img,None)
     kp2, des2 = sift.detectAndCompute(map_img, None)
 
@@ -97,7 +97,7 @@ def get_matched_coordinates(temp_img, map_img):
 
     # find matches by knn which calculates point distance in 128 dim
     matches = flann.knnMatch(des1, des2, k=2)
-    # store all the good matches as per Lowe's ratio test.
+
     good = []
     for m, n in matches:
         if m.distance < 0.75*n.distance:
@@ -118,7 +118,7 @@ def get_matched_coordinates(temp_img, map_img):
         h, w = temp_img.shape
         pts = np.float32([[0, 0], [0, h-1], [w-1, h-1],
                           [w-1, 0]]).reshape(-1, 1, 2)
-        dst = cv2.perspectiveTransform(pts, M)  # matched coordinates
+        dst = cv2.perspectiveTransform(pts, M)  
 
         map_img = cv2.polylines(
             map_img, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
@@ -128,24 +128,19 @@ def get_matched_coordinates(temp_img, map_img):
               (len(good), MIN_MATCH_COUNT))
         matchesMask = None
 
-    draw_params = dict(matchColor=(200, 0, 200),  # draw matches in green color
+    draw_params = dict(matchColor=(200, 0, 200),  
                        singlePointColor=None,
-                       matchesMask=matchesMask,  # draw only inliers
+                       matchesMask=matchesMask,  
                        flags=2)
 
-    # draw template and map image, matches, and keypoints
     img3 = cv2.drawMatches(temp_img, kp1, map_img, kp2,
                            good, None, **draw_params)
 
-    # show result image
     plt.imshow(img3, 'gray'), plt.axis('off'), plt.show()
 
-    # result image path
-    cv2.imwrite(os.path.join('result2.png'), img3)
+    cv2.imwrite(os.path.join('resultFB.png'), img3)
     return img3
 
-
-# # read images
 temp_img_gray = cv2.imread('MytilusEtalons/10.png', 0)
 map_img_gray = cv2.imread('Mytilus/musla9.png', 0)
 get_matched_coordinates(temp_img_gray, map_img_gray)
@@ -169,15 +164,10 @@ matches = sorted(matches, key=lambda x: x.distance)
 
 # draw first 30 matches
 match_img = cv2.drawMatches(img1, kp1, img2, kp2, matches[:30], None)
+cv2.imwrite(os.path.join('resultORB.png'), match_img)
 plt.imshow(match_img),
 plt.axis('off')
 plt.show()
-
-# 3 task - 
-import numpy as np
-import cv2
-from matplotlib import pyplot as plt
-
 
 
 
@@ -233,9 +223,9 @@ def get_matched_coordinates(temp_img, map_img):
               (len(good), MIN_MATCH_COUNT))
         matchesMask = None
 
-    draw_params = dict(matchColor=(200, 0, 200),  # draw matches in green color
+    draw_params = dict(matchColor=(0, 255, 0),  
                        singlePointColor=None,
-                       matchesMask=matchesMask,  # draw only inliers
+                       matchesMask=matchesMask,
                        flags=2)
 
     # draw template and map image, matches, and keypoints
