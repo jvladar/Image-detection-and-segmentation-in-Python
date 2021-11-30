@@ -10,8 +10,6 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-# todo remove .DS_store files from repository
-
 dataDir='coco'
 dataType='images'
 annFile='{}/annotations/instances_{}.json'.format(dataDir,dataType)
@@ -25,17 +23,13 @@ categories = coco.loadCats(catIDs)
 
 print ("Categories:", categories)
 
-def saving(name, generate_files=True):
-    classes = [name]  # todo refactor
+def saving(className, generate_files=True):
     images = []
-    if classes != None:
-        # iterate for each individual class in the list
-        for className in classes:
-            # get all images containing given class
-            catIds = coco.getCatIds(catNms=className)
-            imgIds = coco.getImgIds(catIds=catIds)
-            images += coco.loadImgs(imgIds)
-    else: # todo delete branch
+    if className != None:
+        catIds = coco.getCatIds(catNms=className)
+        imgIds = coco.getImgIds(catIds=catIds)
+        images += coco.loadImgs(imgIds)
+    else:
         imgIds = coco.getImgIds()
         images = coco.loadImgs(imgIds)
         
@@ -60,7 +54,7 @@ def saving(name, generate_files=True):
         coco.showAnns(anns)
         if not os.path.exists("Frames"):
             os.mkdir("Frames")
-        plt.savefig("Frames" + '/' + str(i) + name + "Fr.png", bbox_inches='tight',pad_inches = 0)
+        plt.savefig("Frames" + '/' + str(i) + className + "Fr.png", bbox_inches='tight',pad_inches = 0)
         plt.close()
 
         print("Number of images containing the filter classes:", dataset_size)
@@ -72,7 +66,7 @@ def saving(name, generate_files=True):
         plt.axis('off')
         if not os.path.exists("Masks"):
             os.mkdir("Masks")
-        plt.savefig("Masks" + '/' + str(i) + name + "Ms.png", bbox_inches='tight',pad_inches = 0)
+        plt.savefig("Masks" + '/' + str(i) + className + "Ms.png", bbox_inches='tight',pad_inches = 0)
         plt.close()
     return unique_images
 
@@ -242,7 +236,7 @@ aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 # visualizeGenerator(aug_gen)
 
 """"
-APLIKACE NA MODEL
+APPLY ON MODEL
 """
 # -> Create filtered train dataset (using filterDataset()) 
 # -> Create filtered val dataset (using filterDataset())
