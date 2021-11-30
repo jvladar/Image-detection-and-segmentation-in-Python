@@ -111,8 +111,6 @@ def getBinaryMask(imageObj, coco, catIds, input_image_size):
     train_mask = train_mask.reshape(input_image_size[0], input_image_size[1], 1)
     return train_mask
 
-# images = unique_images z saving fkce
-# folder = cocoOcean
 def dataGeneratorCoco(images, classes, coco, folder, 
                       input_image_size=(224,224), batch_size=4,  # todo edit image size according to selected model
                       mode='', mask_type='binary'):  # todo odebrat mask_type
@@ -171,7 +169,7 @@ def visualizeGenerator(gen):
     plt.show()
 
 batch_size = 8
-input_image_size = (224, 224)  # todo edit image size according to selected model
+input_image_size = (224, 224)
 # mode = 'train'
 
 # val_gen = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_size, batch_size)
@@ -182,7 +180,6 @@ val_gen_val = dataGeneratorCoco(uniq_im, categories, coco, dataDir, input_image_
 
 """
 AUGMENTATION
-2.2
 """
 
 def augmentationsGenerator(gen, augGeneratorArgs, seed=None):
@@ -228,8 +225,6 @@ augGeneratorArgs = dict(featurewise_center = False,
                         fill_mode = 'reflect',
                         data_format = 'channels_last')
 
-# Call the function with the arguments
-# aug_gen = augmentationsGenerator(val_gen, augGeneratorArgs)
 aug_gen_train = augmentationsGenerator(val_gen_train, augGeneratorArgs)
 aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 
@@ -238,16 +233,9 @@ aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 """"
 APPLY ON MODEL
 """
-# -> Create filtered train dataset (using filterDataset()) 
-# -> Create filtered val dataset (using filterDataset())
-# -> Create train generator (using dataGeneratorCoco()) 
-# -> Create train generator (using dataGeneratorCoco())
-# Set your parameters
 NUMBER_OF_EPOCHS = 2
 n_epochs = NUMBER_OF_EPOCHS
 IMG_SHAPE = input_image_size + (3,)
-# optimizery -> https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
-# loss funkce -> https://www.tensorflow.org/api_docs/python/tf/keras/losses
 
 dataset_size_train = 15
 dataset_size_val = 8
@@ -258,9 +246,7 @@ model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
                                           weights='imagenet')
 # opt = tf.keras.optimizers.Adam(learning_rate=0.001)
 # lossFn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-# Compile your model first
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-# Start the training process
 history = model.fit(x = aug_gen_train,
                     validation_data = aug_gen_val,
                     steps_per_epoch = steps_per_epoch,
