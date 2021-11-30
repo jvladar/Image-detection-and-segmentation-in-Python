@@ -2,9 +2,9 @@ Dokoncit a pushnout original img foldery
 Task 2
     poznamka s rotacemi u dvojky!
     finish resolution part
-Task 3
-    commentary
 
 Task 4
     commentary
+    nejak zoraganizovat .py fily k te ctyrce
+    smazat hw2_4 a hw242
 
