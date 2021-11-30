@@ -16,11 +16,11 @@ from utils import (
 # hyperparameters
 LEARNING_RATE = 1e-4
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 NUM_EPOCHS = 3
 NUM_WORKERS = 2
-IMAGE_HEIGHT = 128
-IMAGE_WIDTH = 128
+IMAGE_HEIGHT = 256
+IMAGE_WIDTH = 256
 PIN_MEMORY = True
 LOAD_MODEL = False
 TRAIN_IMG_DIR = "data/train_images/"
@@ -115,9 +115,7 @@ def main():
         check_accuracy(val_loader, model, device=DEVICE)
 
         # print some examples to a folder
-        save_predictions_as_imgs(
-            val_loader, model, folder="saved_images/", device=DEVICE
-        )
+        save_predictions_as_imgs(val_loader, model, folder="result_images/", device=DEVICE)
 
 if __name__ == "__main__":
     main()

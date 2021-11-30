@@ -78,7 +78,7 @@ if ukazka_part_1:
     print("Number of images containing the filter classes:", dataset_size)
 
     """
-    4. Image Segmentation Mask Generation
+    1.4. Image Segmentation Mask Generation
     """
     filterClasses = ['Mytilus', 'Zostera']
     mask = np.zeros((img['height'],img['width']))
@@ -305,7 +305,6 @@ val_gen_val = dataGeneratorCoco(images, classes, coco, dataDir, input_image_size
 aug_gen_train = augmentationsGenerator(val_gen_train, augGeneratorArgs)
 aug_gen_val = augmentationsGenerator(val_gen_val, augGeneratorArgs)
 
-# raise "chyba"
 # Create filtered train dataset (using filterDataset()) 
 # Create filtered val dataset (using filterDataset()) 
 

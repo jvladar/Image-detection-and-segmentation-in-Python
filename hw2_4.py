@@ -7,8 +7,6 @@ import cv2
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 
-
-
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
